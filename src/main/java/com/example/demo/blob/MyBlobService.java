@@ -1,33 +1,31 @@
 package com.example.demo.blob;
 
+import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class MyBlobService {
-
-    @Value("${azure.myblob.url}")
-    private String azureurl;
-
-    @Value("${azure.myblob.container}")
-    private String containerName;
+    private final AzureBlobProperties azureBlobProperties;
 
     private BlobContainerClient containerClient() {
-        log.info("url: {}", azureurl);
-        log.info("container: {}", containerName);
         BlobServiceClient serviceClient = new BlobServiceClientBuilder()
-                .connectionString(azureurl).buildClient();
-        BlobContainerClient container = serviceClient.getBlobContainerClient(containerName);
+                .connectionString(azureBlobProperties.getUrl()).buildClient();
+        BlobContainerClient container = serviceClient.getBlobContainerClient(azureBlobProperties.getContainer());
         return container;
     }
 
@@ -41,6 +39,16 @@ public class MyBlobService {
         }
         log.info("List blobs END");
         return list;
+    }
+
+    public ByteArrayOutputStream downloadFile(String blobitem) {
+        log.info("Download BEGIN {}", blobitem);
+        BlobContainerClient containerClient = containerClient();
+        BlobClient blobClient = containerClient.getBlobClient(blobitem);
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        blobClient.download(os);
+        log.info("Download END");
+        return os;
     }
 
 }

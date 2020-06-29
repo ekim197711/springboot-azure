@@ -1,0 +1,1 @@
+curl "localhost:8080/api/blob/download/importantnote.txt" --output ./myfile1.txt
