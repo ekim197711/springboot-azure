@@ -8,11 +8,10 @@ import com.azure.storage.blob.models.BlobItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +23,7 @@ public class MyBlobService {
 
     private BlobContainerClient containerClient() {
         BlobServiceClient serviceClient = new BlobServiceClientBuilder()
-                .connectionString(azureBlobProperties.getUrl()).buildClient();
+                .connectionString(azureBlobProperties.getConnectionstring()).buildClient();
         BlobContainerClient container = serviceClient.getBlobContainerClient(azureBlobProperties.getContainer());
         return container;
     }
@@ -49,6 +48,19 @@ public class MyBlobService {
         blobClient.download(os);
         log.info("Download END");
         return os;
+    }
+
+    public String storeFile(String filename, InputStream content, long length) {
+        log.info("Azure store file BEGIN {}", filename);
+        BlobClient client = containerClient().getBlobClient(filename);
+        if (client.exists()) {
+            log.warn("The file was already located on azure");
+        } else {
+            client.upload(content, length);
+        }
+
+        log.info("Azure store file END");
+        return "File uploaded with success!";
     }
 
 }
